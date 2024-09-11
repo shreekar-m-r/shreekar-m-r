@@ -1641,36 +1641,61 @@ print(stacking4_test_perf)
 confusion_matrix_sklearn(stacking_classifier4, X_test, y_test)
 
 
-# Define the cost of retention campaigns and the expected revenue from a retained customer
-retention_offer_cost = 50  # hypothetical cost of the retention offer (e.g., discount)
-average_revenue_per_account = 200  # average monthly revenue per account
+# Check if the model supports predict_proba
+if hasattr(stacking_classifier4, "predict_proba"):
+    churn_probs = stacking_classifier4.predict_proba(X_test)[:, 1]
+    print("Churn probabilities calculated successfully.")
+else:
+    print("The model does not support predict_proba.")
 
-# Assume that the model identified these many high, medium, and low-risk customers
-high_risk_customers = 150  # number of high-risk customers
-medium_risk_customers = 100  # number of medium-risk customers
-low_risk_customers = 50  # number of low-risk customers
+# Predict churn probabilities for the test set
+churn_probs = stacking_classifier4.predict_proba(X_test)[:, 1]  # Churn class probability
 
-# Define retention rates after the offer
-retention_rate_high = 0.70  # 70% of high-risk customers are retained
-retention_rate_medium = 0.50  # 50% of medium-risk customers are retained
-retention_rate_low = 0.30  # 30% of low-risk customers are retained
+# Segment customers based on churn probability thresholds
+high_risk = X_test[churn_probs >= 0.70]  # High-risk customers (70% or higher churn probability)
+medium_risk = X_test[(churn_probs >= 0.40) & (churn_probs < 0.70)]  # Medium-risk customers (40% to 69%)
+low_risk = X_test[churn_probs < 0.40]  # Low-risk customers (below 40%)
 
-# Calculate total revenue and cost for each segment
+# Get the count of customers in each segment
+high_risk_count = len(high_risk)
+medium_risk_count = len(medium_risk)
+low_risk_count = len(low_risk)
+
+# Print the number of customers in each risk category
+print(f"High-risk customers: {high_risk_count}")
+print(f"Medium-risk customers: {medium_risk_count}")
+print(f"Low-risk customers: {low_risk_count}")
+
+# Define retention offer cost and average revenue per account
+retention_offer_cost = 50  # Adjust as needed
+average_revenue_per_account = 200  # Adjust as needed
+
+# Use actual counts for high, medium, and low-risk customers
+high_risk_customers = high_risk_count
+medium_risk_customers = medium_risk_count
+low_risk_customers = low_risk_count
+
+# Define retention rates for each risk category
+retention_rate_high = 0.70  # Adjust based on past data or expectations
+retention_rate_medium = 0.50  # Adjust based on past data or expectations
+retention_rate_low = 0.30  # Adjust based on past data or expectations
+
+# Calculate total revenue from retained customers
 retained_high = high_risk_customers * retention_rate_high * average_revenue_per_account
 retained_medium = medium_risk_customers * retention_rate_medium * average_revenue_per_account
 retained_low = low_risk_customers * retention_rate_low * average_revenue_per_account
 
-# Total cost of retention campaigns
+# Calculate total cost of retention campaigns
 total_retention_cost = (high_risk_customers + medium_risk_customers + low_risk_customers) * retention_offer_cost
 
-# Total revenue from retained customers
+# Calculate total revenue from retained customers
 total_revenue_retained = retained_high + retained_medium + retained_low
 
-# Profit from retention campaigns
+# Calculate profit from retention campaigns
 profit_from_campaigns = total_revenue_retained - total_retention_cost
 
-# Display the cost-benefit analysis 
-print("Cost of Retention Campaigns: ₹", f"{total_retention_cost:,.2f}")
-print("Total Revenue from Retained Customers: ₹", f"{total_revenue_retained:,.2f}")
-print("Profit from Retention Campaigns: ₹", f"{profit_from_campaigns:,.2f}")
+# Display the cost-benefit analysis
+print(f"Cost of Retention Campaigns: ₹{total_retention_cost:,.2f}")
+print(f"Total Revenue from Retained Customers: ₹{total_revenue_retained:,.2f}")
+print(f"Profit from Retention Campaigns: ₹{profit_from_campaigns:,.2f}")
 
